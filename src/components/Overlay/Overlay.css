@@ -1,0 +1,14 @@
+.App {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: red;
+    position: fixed;
+    bottom: 5rem;
+    right: 7rem;
+    left: 2rem;
+}
+
+.App .main {
+    color: white;
+    display: flex;
+    align-items: baseline;
+}
