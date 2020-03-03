@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken')
  * Helper class for authentication against an EBS service. Allows the storage of a token to be accessed across componenents. 
  * This is not meant to be a source of truth. Use only for presentational purposes. 
  */
-export default class Authentication{
+export default class Authentication {
 
     constructor(token, opaque_id){
         this.state={
@@ -14,6 +14,8 @@ export default class Authentication{
             isMod:false,
             role:""
         }
+
+        this.baseURL = process.env.NODE_ENV === 'development' ? "https://localhost:8081" : "";
     }
 
     isLoggedIn(){
@@ -94,7 +96,7 @@ export default class Authentication{
                     'Authorization': `Bearer ${this.state.token}`
                 }
     
-                fetch(url,
+                fetch(this.baseURL + url,
                     {
                         method,
                         headers,
