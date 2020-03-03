@@ -6,7 +6,7 @@ openssl req \
   -days 1001 \
   -nodes \
   -x509 \
-  -subj "/C=US/ST=California/L=San Francisco/O=LULZCorp/OU=web/CN=localhost" \
+  -subj "/C=US/ST=Pennsylvania/L=Philadelphia/O=LULZCorp/OU=web/CN=localhost" \
   -extensions SAN \
   -config <( cat $( [[ "Darwin" = "$(uname -s)" ]]  && echo /System/Library/OpenSSL/openssl.cnf || echo /etc/ssl/openssl.cnf  ) \
     <(printf "[SAN]\nsubjectAltName='DNS:localhost'")) \

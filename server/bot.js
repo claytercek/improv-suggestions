@@ -10,7 +10,7 @@ const opts = {
 
 class Bot {
   constructor(options) {
-    this.onSuggestion = options.onSuggestion;
+    this.onSuggestion = (username, content, channel) => options.onSuggestion(username, content, channel);
     this.channels = [];
     
     // Create a client with our options
@@ -44,12 +44,13 @@ class Bot {
   // Called every time a message comes in
   onMessageHandler (target, context, msg, self) {
     if (self) return;  // Ignore messages from the bot
-    console.dir(context);
 
     // // Remove whitespace from chat message
-    const commandName = msg.trim();
+    const commandName = msg.trim().split(" ")[0];
 
-    this.client.say(target, "test");
+    if (commandName === "!suggest") {
+      this.onSuggestion(context["display-name"], msg.substr(msg.indexOf(" ") + 1), target.substring(1));
+    }
   }
 
   // Called every time the bot connects to Twitch chat

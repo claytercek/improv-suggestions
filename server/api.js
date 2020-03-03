@@ -10,6 +10,7 @@ const clientId = process.env.CLIENT_ID;
 twitch_api.clientID = clientId;
 
 const bearerPrefix = 'Bearer ';             // HTTP authorization headers have this prefix
+const serverTokenDurationSec = 30;          // our tokens for pubsub expire after 30 seconds
 
 const STRINGS = {
   serverStarted: 'Server running at %s',
@@ -31,7 +32,7 @@ function verifyAndDecode(header) {
       throw Boom.unauthorized(STRINGS.invalidJwt);
     }
   }
-  throw Boom.unauthorized(STRINGS.invalidAuthHeader);
+  return({error: STRINGS.invalidAuthHeader});
 }
 
 // Create and return a JWT for use by this service.

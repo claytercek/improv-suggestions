@@ -1,83 +1,78 @@
 require('dotenv').config();
+const https = require('https');
 const fs = require('fs');
-const Hapi = require('hapi');
 const path = require('path');
 const request = require('request');
 const Bot = require("./bot");
 const api = require("./api");
+const express = require('express');
+const logger = require('morgan');
+const SuggestList = require('./suggestList');
 
-const myBot = new Bot({ onSuggestion: () => { } });
-
-// Use verbose logging during development.  Set this to false for production.
-const verboseLogging = true;
-const verboseLog = verboseLogging ? console.log.bind(console) : () => { };
-
-// Service state variables
-const serverTokenDurationSec = 30;          // our tokens for pubsub expire after 30 seconds
-const userCooldownMs = 1000;                // maximum input rate per user to prevent bot abuse
-const userCooldownClearIntervalMs = 60000;  // interval to reset our tracking object
-const channelCooldownMs = 1000;             // maximum broadcast rate per channel
-const channelCooldowns = {};                // rate limit compliance
-let userCooldowns = {};                     // spam prevention
+var lists = {};
+const myBot = new Bot({ onSuggestion: (username, content, channel) => onSuggestion(username, content, channel) });
 
 
-const serverOptions = {
-  host: 'localhost',
-  port: 8081,
-  routes: {
-    cors: {
-      origin: ['*'],
-    },
-  },
-};
+const app = express();
+const port = process.env.PORT || 8081;
+
+app.post("/suggestion/start", suggestionStartHandler);
+app.post("/suggestion/select", suggestionSelectHandler);
+
+app.use((req, res, next) => {
+  console.log("CORS")
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, x-twitch-jwt');
+  res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET, POST');
+  // Note that the origin of an extension iframe will be null
+  // so the Access-Control-Allow-Origin has to be wildcard.
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  next();
+});
+
+app.use(logger('dev'));
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 const serverPathRoot = path.resolve(__dirname, '..', 'conf', 'server');
 if (fs.existsSync(serverPathRoot + '.crt') && fs.existsSync(serverPathRoot + '.key')) {
-  serverOptions.tls = {
+
+  app.set('port', port);
+  
+  https.createServer({
     // If you need a certificate, execute "npm run cert".
     cert: fs.readFileSync(serverPathRoot + '.crt'),
     key: fs.readFileSync(serverPathRoot + '.key'),
-  };
+    requestCert: false
+  }, app).listen(port, () => {console.log(`Certified server listening on port ${port}`)});
+
+} else {
+  app.listen(port, () => {console.log(`Server listening on port ${port}`)});
 }
-const server = new Hapi.Server(serverOptions);
 
-(async () => {
-
-  // Handle broadcaster request to pick specific suggestion.
-  server.route({
-    method: 'POST',
-    path: '/suggestion/select',
-    handler: suggestionSelectHandler,
-  });
-
-
-  server.route({
-    method: 'POST',
-    path: '/suggestion/start',
-    handler: suggestionStartHandler,
-  });
-
-  // Start the server.
-  await server.start();
-  console.log("Server started on", server.info.uri);
-
-  // Periodically clear cool-down tracking to prevent unbounded growth due to
-  // per-session logged-out user tokens.
-  setInterval(() => { userCooldowns = {}; }, userCooldownClearIntervalMs);
-})();
-
-function suggestionStartHandler(req) {
+function suggestionStartHandler(req, res, next) {
   // Verify all requests.
+
   const token = api.verifyAndDecode(req.headers.authorization);
-  api.getChannel(token.channel_id).then(res => {
-    console.log(res);
+
+  if (token.error) {
+    next(token.error);
+  }
+
+  api.getChannel(token.channel_id).then(dat => {
+
+    console.log("starting suggestions on", dat.name);
+    myBot.startListening(dat.name);
+    lists[dat.name] = new SuggestList({id: token.channel_id});
+
+    res.status(200).send("success");
+    
   }).catch((err) => {
     console.log(err);
+    next(err);
   })
   return 0;
 }
 
-function suggestionSelectHandler(req) {
+function suggestionSelectHandler(req, res, next) {
   // Verify all requests.
   const payload = api.verifyAndDecode(req.headers.authorization);
   const { channel_id: channelId, opaque_user_id: opaqueUserId } = payload;
@@ -100,10 +95,50 @@ function attemptColorBroadcast(channelId) {
   }
 }
 
+function onSuggestion(username, content, channel) {
+  lists[channel].addSuggestion(username, content);
+  sendListUpdate(channel);
+}
+
+function sendListUpdate(channel) {
+  const headers = {
+    'Client-ID': api.clientId,
+    'Content-Type': 'application/json',
+    'Authorization': api.makeServerToken(lists[channel].getId()),
+  };
+  // Create the POST body for the Twitch API request.
+  const message = JSON.stringify({
+    type: "updateList",
+    suggestions: lists[channel].getSuggestions()
+  })
+
+  const body = JSON.stringify({
+    content_type: 'application/json',
+    message,
+    targets: ['broadcast'],
+  });
+
+  // Send the broadcast request to the Twitch API.
+  request(
+    `https://api.twitch.tv/extensions/message/${lists[channel].getId()}`,
+    {
+      method: 'POST',
+      headers,
+      body,
+    }
+    , (err, res) => {
+      if (err) {
+        console.log("error sending list update", channel, err);
+      } else {
+        console.log("success sending list update", channel, res.statusCode);
+      }
+    });
+}
+
 function sendColorBroadcast(channelId) {
   // Set the HTTP headers required by the Twitch API.
   const headers = {
-    'Client-ID': clientId,
+    'Client-ID': api.clientId,
     'Content-Type': 'application/json',
     'Authorization': api.makeServerToken(channelId),
   };
@@ -127,7 +162,7 @@ function sendColorBroadcast(channelId) {
       if (err) {
         console.log("error sending pubsub", channelId, err);
       } else {
-        verboseLog("success sending pubsub", channelId, res.statusCode);
+        console.log("success sending pubsub", channelId, res.statusCode);
       }
     });
 }

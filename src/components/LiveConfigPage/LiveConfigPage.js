@@ -63,8 +63,14 @@ export default class LiveConfigPage extends React.Component {
   }
 
   startSuggestion() {
-    this.twitch.rig.log(`SUGGESTION PICKED BABY`);
-    this.Authentication.makeCall("https://localhost:8081/suggestion/start", "POST", "TEST!@#");
+    this.twitch.rig.log(`Initiating suggestions`);
+    this.Authentication.makeCall("https://localhost:8081/suggestion/start", "POST", "").then(res => {
+      this.twitch.rig.log(res);
+      this.twitch.rig.log("hello world?");
+    }).catch(err => {
+      this.twitch.rig.log(err);
+      this.twitch.rig.log("hello world? 123");
+    });
   }
 
   render() {

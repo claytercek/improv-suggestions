@@ -94,14 +94,15 @@ export default class Authentication{
                     'Authorization': `Bearer ${this.state.token}`
                 }
     
-                fetch(url,
-                    {
-                        method,
-                        headers,
-                        body: JSON.stringify(data)
-                    })
-                    .then(response=>resolve(response))
-                    .catch(e=>reject(e))
+                fetch(url).then(function(response) {
+                    console.log(response.headers.get('Content-Type'));
+                    console.log(response.headers.get('Date'));
+                
+                    console.log(response.status);
+                    console.log(response.statusText);
+                    console.log(response.type);
+                    console.log(response.url);
+                });
             }else{
                 reject('Unauthorized')
             }
