@@ -16,21 +16,22 @@ const myBot = new Bot({ onSuggestion: (username, content, channel) => onSuggesti
 const app = express();
 const port = process.env.PORT || 8081;
 
-app.post("/suggestion/start", suggestionStartHandler);
-app.post("/suggestion/select", suggestionSelectHandler);
 
-app.use((req, res, next) => {
-  console.log("CORS")
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, x-twitch-jwt');
-  res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET, POST');
-  // Note that the origin of an extension iframe will be null
-  // so the Access-Control-Allow-Origin has to be wildcard.
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  next();
-});
+app.use('/frontend', express.static(path.join(__dirname, '..', 'dist')));
+      app.use((req, res, next) => {
+        console.log("CORS");
+        res.header("Access-Control-Allow-Origin", "*");
+        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, x-twitch-jwt");
+        // Note that the origin of an extension iframe will be null
+        // so the Access-Control-Allow-Origin has to be wildcard.
+        next();
+      });
 
 app.use(logger('dev'));
 app.use(express.static(path.join(__dirname, '..', 'public')));
+
+app.post("/suggestion/start", suggestionStartHandler);
+app.post("/suggestion/select", suggestionSelectHandler);
 
 const serverPathRoot = path.resolve(__dirname, '..', 'conf', 'server');
 if (fs.existsSync(serverPathRoot + '.crt') && fs.existsSync(serverPathRoot + '.key')) {

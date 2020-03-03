@@ -1,6 +1,5 @@
 import React from 'react'
 import Authentication from '../../util/Authentication/Authentication'
-import axios from 'axios'
 
 import './LiveConfigPage.css'
 
