@@ -18,20 +18,21 @@ const port = process.env.PORT || 8081;
 
 
 app.use('/frontend', express.static(path.join(__dirname, '..', 'dist')));
-      app.use((req, res, next) => {
-        console.log("CORS");
-        res.header("Access-Control-Allow-Origin", "*");
-        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, x-twitch-jwt");
-        // Note that the origin of an extension iframe will be null
-        // so the Access-Control-Allow-Origin has to be wildcard.
-        next();
-      });
+
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, x-twitch-jwt");
+  // Note that the origin of an extension iframe will be null
+  // so the Access-Control-Allow-Origin has to be wildcard.
+  next();
+});
 
 app.use(logger('dev'));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.post("/suggestion/start", suggestionStartHandler);
 app.post("/suggestion/select", suggestionSelectHandler);
+app.post("/suggestion/cancel", suggestionCancelHandler);
 
 const serverPathRoot = path.resolve(__dirname, '..', 'conf', 'server');
 if (fs.existsSync(serverPathRoot + '.crt') && fs.existsSync(serverPathRoot + '.key')) {
@@ -59,7 +60,6 @@ function suggestionStartHandler(req, res, next) {
   }
 
   api.getChannel(token.channel_id).then(dat => {
-
     console.log("starting suggestions on", dat.name);
     myBot.startListening(dat.name);
     lists[dat.name] = new SuggestList({id: token.channel_id});
@@ -70,7 +70,6 @@ function suggestionStartHandler(req, res, next) {
     console.log(err);
     next(err);
   })
-  return 0;
 }
 
 function suggestionSelectHandler(req, res, next) {
@@ -78,23 +77,29 @@ function suggestionSelectHandler(req, res, next) {
   const payload = api.verifyAndDecode(req.headers.authorization);
   const { channel_id: channelId, opaque_user_id: opaqueUserId } = payload;
   console.dir(payload);
-  attemptColorBroadcast(channelId);
-  return 0;
 }
 
-function attemptColorBroadcast(channelId) {
-  // Check the cool-down to determine if it's okay to send now.
-  const now = Date.now();
-  const cooldown = channelCooldowns[channelId];
-  if (!cooldown || cooldown.time < now) {
-    // It is.
-    sendColorBroadcast(channelId);
-    channelCooldowns[channelId] = { time: now + channelCooldownMs };
-  } else if (!cooldown.trigger) {
-    // It isn't; schedule a delayed broadcast if we haven't already done so.
-    cooldown.trigger = setTimeout(sendColorBroadcast, now - cooldown.time, channelId);
+function suggestionCancelHandler(req, res, next) {
+  // Verify all requests.
+
+  const token = api.verifyAndDecode(req.headers.authorization);
+
+  if (token.error) {
+    next(token.error);
   }
+
+  api.getChannel(token.channel_id).then(dat => {
+    console.log("canceling suggestions on", dat.name);
+    myBot.stopListening(dat.name);
+    delete lists[dat.name];
+    res.status(200).send("success");
+    
+  }).catch((err) => {
+    console.log(err);
+    next(err);
+  })
 }
+
 
 function onSuggestion(username, content, channel) {
   lists[channel].addSuggestion(username, content);

@@ -6,16 +6,20 @@ import './LiveConfigPage.css'
 export default class LiveConfigPage extends React.Component {
   constructor(props) {
     super(props)
-    this.Authentication = new Authentication()
+    this.Authentication = new Authentication();
 
     //if the extension is running on twitch or dev rig, set the shorthand here. otherwise, set to null. 
     this.twitch = window.Twitch ? window.Twitch.ext : null
     this.state = {
       finishedLoading: false,
-      theme: 'light'
+      theme: 'light',
+      help: "test 123",
+      inProgress: false
     }
 
     this.startSuggestion = this.startSuggestion.bind(this);
+    this.cancelSuggestion = this.cancelSuggestion.bind(this);
+    this.pickSuggestion = this.pickSuggestion.bind(this);
   }
 
   contextUpdate(context, delta) {
@@ -64,11 +68,34 @@ export default class LiveConfigPage extends React.Component {
   startSuggestion() {
     this.twitch.rig.log(`Initiating suggestions`);
     this.Authentication.makeCall("/suggestion/start", "POST", "").then(res => {
-      console.log(res);
-      console.log("hello world?");
+      if (res.data == "success") {
+        this.twitch.rig.log("listening for suggestions")
+        this.setState({inProgress: true})
+      }
     }).catch(err => {
-      console.log(err);
-      console.log("hello world? 123");
+      this.twitch.rig.log("err");
+    });
+  }
+
+  pickSuggestion(index) {
+    this.twitch.rig.log(`Initiating suggestions`);
+    this.Authentication.makeCall("/suggestion/pick", "POST", index).then(res => {
+      if (res.data == "success") {
+        this.twitch.rig.log("successfully picked");
+        this.setState({inProgress: false});
+      }
+    }).catch(err => {
+      this.twitch.rig.log("err");
+    });
+  }
+
+  cancelSuggestion() {
+    this.twitch.rig.log(`Canceling suggestions`);
+    this.Authentication.makeCall("/suggestion/cancel", "POST", "").then(res => {
+      this.twitch.rig.log("successfully canceled");
+      this.setState({inProgress: false});
+    }).catch(err => {
+      this.twitch.rig.log("err");
     });
   }
 
@@ -78,9 +105,17 @@ export default class LiveConfigPage extends React.Component {
         <div className="LiveConfigPage">
           <div className={this.state.theme === 'light' ? 'LiveConfigPage-light' : 'LiveConfigPage-dark'} >
             <p>Hello world!</p>
-            <p>This is the live config page! </p>
+            <p>This is the live config page! {this.state.help}</p>
+            {this.state.inProgress && 
+              <div>
+                <button onClick={this.cancelSuggestion}>cancel</button> 
+              </div>
+              || 
+              <div>
+                <button onClick={this.startSuggestion}>start suggestion</button>
+              </div>
+            }
           </div>
-          <button onClick={this.startSuggestion}>start suggestion</button>
         </div>
       )
     } else {

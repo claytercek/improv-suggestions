@@ -1,4 +1,10 @@
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
+const axios = require('axios').default;
+
+const api = axios.create({
+baseURL: process.env.NODE_ENV === 'development' ? "https://localhost:8081" : '',
+timeout: 1000,
+});
 
 /**
  * Helper class for authentication against an EBS service. Allows the storage of a token to be accessed across componenents. 
@@ -14,8 +20,6 @@ export default class Authentication {
             isMod:false,
             role:""
         }
-
-        this.baseURL = process.env.NODE_ENV === 'development' ? "https://localhost:8081" : "";
     }
 
     isLoggedIn(){
@@ -95,8 +99,7 @@ export default class Authentication {
                     'Content-Type':'application/json',
                     'Authorization': `Bearer ${this.state.token}`
                 }
-    
-                fetch(this.baseURL + url,
+                api(url,
                     {
                         method,
                         headers,
