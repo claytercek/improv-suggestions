@@ -1,4 +1,3 @@
-
 const Boom = require('boom');
 const jsonwebtoken = require('jsonwebtoken');
 const twitch_api = require('twitch-api-v5');
@@ -9,8 +8,8 @@ const clientId = process.env.CLIENT_ID;
 
 twitch_api.clientID = clientId;
 
-const bearerPrefix = 'Bearer ';             // HTTP authorization headers have this prefix
-const serverTokenDurationSec = 30;          // our tokens for pubsub expire after 30 seconds
+const bearerPrefix = 'Bearer '; // HTTP authorization headers have this prefix
+const serverTokenDurationSec = 30; // our tokens for pubsub expire after 30 seconds
 
 const STRINGS = {
   serverStarted: 'Server running at %s',
@@ -26,13 +25,12 @@ function verifyAndDecode(header) {
     try {
       const token = header.substring(bearerPrefix.length);
       return jsonwebtoken.verify(token, secret, { algorithms: ['HS256'] });
-    }
-    catch (ex) {
-      console.log("unauthorized");
+    } catch (ex) {
+      console.log('unauthorized');
       throw Boom.unauthorized(STRINGS.invalidJwt);
     }
   }
-  return({error: STRINGS.invalidAuthHeader});
+  return { error: STRINGS.invalidAuthHeader };
 }
 
 // Create and return a JWT for use by this service.
@@ -46,9 +44,10 @@ function makeServerToken(channelId) {
       send: ['*'],
     },
   };
-  return bearerPrefix + jsonwebtoken.sign(payload, secret, { algorithm: 'HS256' });
+  return (
+    bearerPrefix + jsonwebtoken.sign(payload, secret, { algorithm: 'HS256' })
+  );
 }
-
 
 function getChannel(channelId) {
   return new Promise((resolve, reject) => {
@@ -59,7 +58,14 @@ function getChannel(channelId) {
         resolve(res);
       }
     });
-  })
+  });
 }
 
-module.exports = { verifyAndDecode, makeServerToken, getChannel, clientId, ownerId, secret };
+module.exports = {
+  verifyAndDecode,
+  makeServerToken,
+  getChannel,
+  clientId,
+  ownerId,
+  secret,
+};

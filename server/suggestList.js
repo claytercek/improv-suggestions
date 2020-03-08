@@ -1,27 +1,27 @@
 class SuggestList {
-	constructor(options) {
-        this.suggestions = [];
-        this.id = options.id;
-    }
-    
-    addSuggestion(username, content) {
-        this.suggestions.push({
-            username,
-            content
-        });
-    }
+  constructor(options) {
+    this.suggestions = [];
+    this.id = options.id;
+  }
 
-    getId() {
-        return this.id;
-    }
+  addSuggestion(username, content) {
+    this.suggestions.push({
+      username,
+      content,
+    });
+  }
 
-    getSuggestion(index) {
-        return this.suggestions[index];
-    }
+  getId() {
+    return this.id;
+  }
 
-    getSuggestions() {
-        return this.suggestions;
-    }
+  getSuggestion(index) {
+    return this.suggestions[index];
+  }
+
+  getSuggestions() {
+    return this.suggestions;
+  }
 }
 
 module.exports = SuggestList;

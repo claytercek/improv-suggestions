@@ -1,8 +1,5 @@
-import React from "react"
-import ReactDOM from "react-dom"
-import Panel from "./components/Panel/Panel"
+import React from 'react';
+import ReactDOM from 'react-dom';
+import Panel from './components/Panel/Panel';
 
-ReactDOM.render(
-  <Panel />,
-  document.getElementById("root")
-)
+ReactDOM.render(<Panel />, document.getElementById('root'));
