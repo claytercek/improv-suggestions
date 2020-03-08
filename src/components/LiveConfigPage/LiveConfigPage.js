@@ -1,7 +1,7 @@
 import React from 'react';
 import Authentication from '../../util/Authentication/Authentication';
 
-import './LiveConfigPage.css';
+import './LiveConfigPage.scss';
 
 export default class LiveConfigPage extends React.Component {
   constructor(props) {
@@ -124,20 +124,24 @@ export default class LiveConfigPage extends React.Component {
                 : 'LiveConfigPage-dark'
             }
           >
-            <p>Hello world!</p>
-            <p>This is the live config page! {this.state.help}</p>
             {(this.state.inProgress && (
               <div>
-                <button onClick={this.cancelSuggestion}>cancel</button>
+                <div>
+                  <button onClick={this.cancelSuggestion} className={"cancel"}>cancel</button>
+                </div>
                 <ul>
                   {this.state.suggestions.map((item, index) => (
                     <li key={item.index}>
-                      <button onClick={() => this.pickSuggestion(index)}>
+                      <button onClick={() => this.pickSuggestion(index)} className={"suggestion"}>
                         <h3>{item.username}</h3>
                         <p>{item.content}</p>
                       </button>
                     </li>
                   ))}
+
+                  {this.state.suggestions.length == 0 && (
+                    <p class="help-text">viewers can contribute by typing "!suggest" followed by their suggestion</p>
+                  )}
                 </ul>
               </div>
             )) || (

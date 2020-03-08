@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css?family=Montserrat:400,600&display=swap');
+
+$active: #49da79f3;
+$cancel: #ff3b55c0;
+$dark: #222222;
+$light: #d3d3d3;
+
+.LiveConfigPage {
+    font-family: Montserrat, Arial, Helvetica, sans-serif;
+}
+
+.LiveConfigPage-light{
+    color:$dark;
+}
+
+.LiveConfigPage-dark{
+    color:$light;
+}
+
+
+button {
+    display: block;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+
+    width: 100%;
+    padding: 20px;
+    font-size: 16px;
+
+    border-radius: 8px;
+    border-width: 3px;
+    border-color: $dark;
+    background: transparent;
+    color: $dark;
+
+    .LiveConfigPage-dark & {
+        border-color: $light;
+        color: $light;
+    }
+
+    &:hover {
+        background-color: rgba($active, 0.2);
+        border-color: darken($active, 20);
+        color: darken($active, 20);
+    }
+    
+    &.cancel {
+        background-color: rgba($cancel, 0.1);
+        border-color: darken($cancel, 20);
+        color: darken($cancel, 20);
+    }
+    
+    .LiveConfigPage-dark &.cancel {
+        background-color: rgba($cancel, 0.1);
+        border-color: lighten($cancel, 10);
+        color: lighten($cancel, 10);
+    }
+
+    &.cancel:hover {
+        background-color: rgba($cancel, 0.4);
+    }
+
+    &.suggestion {
+        display: flex;
+        align-items: baseline;
+        margin-top: 8px;
+        border-width: 2px;
+
+        h3 {
+            font-size: 16px;
+            margin-right: 16px;
+        }
+
+        > * {
+            margin: 0;
+            text-align: left;
+        }
+        
+    }
+}
+
+
+ul {
+    list-style-type: none;
+    padding-left: 0;
+}
