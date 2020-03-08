@@ -1,6 +1,6 @@
 import React from 'react';
 import Authentication from '../../util/Authentication/Authentication';
-
+import {Transition} from 'react-spring/renderprops'
 import './Overlay.css';
 
 export default class Overlay extends React.Component {
@@ -19,9 +19,11 @@ export default class Overlay extends React.Component {
         content: 'this is my suggestion',
       },
       colors: {
-        primary: '#FFFAAA',
-        secondary: '#000FFF',
+        primary: '#EA3546',
+        secondary: '#662E9B',
       },
+      show:false,
+      timeout: 5000
     };
   }
 
@@ -60,7 +62,9 @@ export default class Overlay extends React.Component {
         switch (body.type) {
           case 'selectSuggestion':
             this.twitch.rig.log('updating list');
-            this.setState({ suggestion: body.suggestion });
+            this.setState({ suggestion: body.suggestion, show: true });
+            setTimeout(() => this.setState({show: false}), this.state.timeout);
+
         }
       });
 
@@ -72,6 +76,7 @@ export default class Overlay extends React.Component {
         this.contextUpdate(context, delta);
       });
     }
+
   }
 
   componentWillUnmount() {
@@ -92,6 +97,7 @@ export default class Overlay extends React.Component {
       backgroundColor: this.state.colors.secondary
     }
 
+    
     if (this.state.finishedLoading && this.state.isVisible) {
       return (
         <div className="App">
@@ -100,12 +106,37 @@ export default class Overlay extends React.Component {
               this.state.theme === 'light' ? 'App-light main' : 'App-dark main'
             }
           >
-            <h3 id="username" style={usernameStyle}>
-              {this.state.suggestion.username}
-            </h3>
-            <p id="suggestion" style={suggestionStyle}>
-              {this.state.suggestion.content}
-            </p>
+            <Transition
+              config={{tension: 210, friction: 20}}
+              items={this.state.show}
+              from={{ width: 0, transform: 'translateX(-100px)' }}
+              enter={{ width: 'auto', transform: 'translateX(0)' }}
+              leave={{ width: 0, transform: 'translateX(200px)' }}>
+              {show => show && (
+                props => 
+                <div style={{...props, ...usernameStyle}} id="username">
+                  <p>
+                    {this.state.suggestion.username}
+                  </p>
+                </div> 
+              )}
+            </Transition>
+            <Transition
+              config={{tension: 210, friction: 20}}
+              items={this.state.show}
+              from={{ width: 0, transform: 'translateX(-20vw)' }}
+              enter={{ width: 'auto', transform: 'translateX(0)' }}
+              trail={70}
+              leave={{ width: 0, transform: 'translateX(40vw)' }}>
+              {show => show && (
+                props => 
+                <div style={{...suggestionStyle, ...props }} id="suggestion" className="wrap">
+                  <p>
+                    {this.state.suggestion.content}
+                  </p>
+                </div>
+              )}
+            </Transition>
           </div>
         </div>
       );
