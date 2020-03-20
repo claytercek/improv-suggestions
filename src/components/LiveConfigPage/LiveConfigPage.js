@@ -140,7 +140,7 @@ export default class LiveConfigPage extends React.Component {
                   ))}
 
                   {this.state.suggestions.length == 0 && (
-                    <p class="help-text">viewers can contribute by typing "!suggest" followed by their suggestion</p>
+                    <p class="help-text">viewers can contribute by typing "!s" followed by their suggestion</p>
                   )}
                 </ul>
               </div>

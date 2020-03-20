@@ -52,7 +52,7 @@ class Bot {
     // // Remove whitespace from chat message
     const commandName = msg.trim().split(' ')[0];
 
-    if (commandName === '!suggest') {
+    if (commandName === '!s') {
       this.onSuggestion(
         context['display-name'],
         msg.substr(msg.indexOf(' ') + 1),
